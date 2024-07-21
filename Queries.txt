@@ -1,0 +1,132 @@
+SELECT c.CountryName, ci.CityName, ci.Population
+FROM city ci
+JOIN country c ON ci.CountryCode = c.CountryCode
+WHERE ci.Population = (SELECT MAX(Population) FROM city WHERE CountryCode = ci.CountryCode);
+
+
+SELECT co.region, AVG(ci.population) AS avg_population
+FROM country co
+JOIN city ci ON co.countrycode = ci.countrycode
+GROUP BY co.region
+
+
+SELECT countryname, localname
+FROM country
+WHERE LENGTH(localname) > (SELECT AVG(LENGTH(localname)) FROM country);
+
+
+SELECT countryname, lifeexpectancy
+FROM country
+WHERE lifeexpectancy > (SELECT AVG(lifeexpectancy) FROM country);
+
+
+SELECT CountryName, SurfaceArea, Population
+FROM country
+WHERE Population > 50000000
+ORDER BY SurfaceArea DESC
+FETCH FIRST 5 ROWS ONLY;
+
+
+SELECT CountryName, IndepYear
+FROM country
+ORDER BY IndepYear ASC
+FETCH FIRST 5 ROWS ONLY;
+
+
+SELECT c.CountryName
+FROM country c
+JOIN city ci ON c.CountryCode = ci.CountryCode
+WHERE ci.Population > 1000000
+GROUP BY c.CountryName
+HAVING COUNT(ci.CityID) > 1;
+
+
+SELECT c.CountryName, 
+       MAX(ci.Population) - MIN(ci.Population) AS PopulationDifference
+FROM country c
+JOIN city ci ON c.CountryCode = ci.CountryCode
+GROUP BY c.CountryName
+ORDER BY PopulationDifference DESC
+FETCH FIRST 5 ROWS ONLY;
+
+
+SELECT CountryName, GNP, SurfaceArea, GNP / SurfaceArea AS GNPToSurfaceRatio
+FROM country
+ORDER BY GNPToSurfaceRatio DESC
+FETCH FIRST 5 ROWS ONLY;
+
+
+SELECT ci1.CountryCode, ci1.CityName AS City1, ci2.CityName AS City2,
+       ABS(ci1.Population - ci2.Population) AS PopulationDifference
+FROM city ci1
+JOIN city ci2 ON ci1.CountryCode = ci2.CountryCode AND ci1.CityID <> ci2.CityID
+ORDER BY PopulationDifference DESC
+FETCH FIRST 1 ROW ONLY;
+
+
+
+
+CREATE PROCEDURE AddCountryAndLanguage (
+    CountryCode CHAR(3),
+    CountryName VARCHAR(100),
+    Continent VARCHAR(50),
+    Region VARCHAR(50),
+    SurfaceArea DECIMAL(10, 2),
+    IndepYear SMALLINT,
+    Population INT,
+    LifeExpectancy DECIMAL(3, 1),
+    GNP DECIMAL(10, 2),
+    GNPOld DECIMAL(10, 2),
+    LocalName VARCHAR(100),
+    GovernmentForm VARCHAR(100),
+    HeadOfState VARCHAR(100),
+    Capital VARCHAR(50),
+    Code2 CHAR(2),
+    OfficialLanguage VARCHAR(100),
+    LanguagePopulation INT
+)
+AS
+DECLARE VARIABLE Percentage DECIMAL(4, 1);
+BEGIN
+    INSERT INTO country (
+        CountryCode, CountryName, Continent, Region, SurfaceArea, IndepYear, Population,
+        LifeExpectancy, GNP, GNPOld, LocalName, GovernmentForm, HeadOfState, Capital, Code2
+    )
+    VALUES (
+        :CountryCode, :CountryName, :Continent, :Region, :SurfaceArea, :IndepYear, :Population,
+        :LifeExpectancy, :GNP, :GNPOld, :LocalName, :GovernmentForm, :HeadOfState, :Capital, :Code2
+    );
+
+    Percentage = (CAST(:LanguagePopulation AS DECIMAL(10, 2)) / CAST(:Population AS DECIMAL(10, 2))) * 100;
+
+
+    INSERT INTO countrylanguage (
+        CountryCode, Language, IsOfficial, Percentage
+    )
+    VALUES (
+        :CountryCode, :OfficialLanguage, TRUE, :Percentage
+    );
+END
+
+
+CREATE PROCEDURE Kataklizm
+AS
+DECLARE VARIABLE AvgDensity DECIMAL(10, 2);
+BEGIN
+
+    FOR
+        SELECT AVG(Population / SurfaceArea) AS AvgDensity
+        FROM country
+    INTO :AvgDensity
+    DO
+    BEGIN
+
+        UPDATE country
+        SET Population = Population * 0.80
+        WHERE (Population / SurfaceArea) > :AvgDensity;
+        
+        UPDATE country
+        SET Population = Population * 0.90
+        WHERE (Population / SurfaceArea) <= :AvgDensity;
+    END
+END

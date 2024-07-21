@@ -1,0 +1,46 @@
+EXECUTE BLOCK
+AS
+BEGIN
+  EXECUTE STATEMENT
+  'CREATE TABLE country (
+    CountryCode CHAR(3) NOT NULL,
+    CountryName VARCHAR(100) NOT NULL,
+    Continent VARCHAR(50) NOT NULL,
+    Region VARCHAR(50),
+    SurfaceArea DECIMAL(10, 2),
+    IndepYear SMALLINT,
+    Population INT,
+    LifeExpectancy DECIMAL(3, 1),
+    GNP DECIMAL(10, 2),
+    GNPOld DECIMAL(10, 2),
+    LocalName VARCHAR(100),
+    GovernmentForm VARCHAR(100),
+    HeadOfState VARCHAR(100),
+    Capital VARCHAR(50),
+    Code2 CHAR(2),
+    PRIMARY KEY (CountryCode)
+)';
+
+  EXECUTE STATEMENT
+'CREATE TABLE city (
+    CityID INT NOT NULL,
+    CityName VARCHAR(100) NOT NULL,
+    CountryCode CHAR(3) NOT NULL,
+    District VARCHAR(100),
+    Population INT,
+    PRIMARY KEY (CityID),
+    FOREIGN KEY (CountryCode) REFERENCES country (CountryCode)
+)';
+
+
+  EXECUTE STATEMENT
+'CREATE TABLE countrylanguage (
+    CountryCode CHAR(3) NOT NULL,
+    Language VARCHAR(100) NOT NULL,
+    IsOfficial boolean,
+    Percentage DECIMAL(4, 1),
+    PRIMARY KEY (CountryCode),
+    FOREIGN KEY (CountryCode) REFERENCES country (CountryCode)
+)';
+
+END
